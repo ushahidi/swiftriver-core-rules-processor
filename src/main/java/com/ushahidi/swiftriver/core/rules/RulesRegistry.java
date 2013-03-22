@@ -17,8 +17,10 @@
 package com.ushahidi.swiftriver.core.rules;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -26,10 +28,13 @@ import java.util.concurrent.ConcurrentMap;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ushahidi.swiftriver.core.model.Rule;
+import com.ushahidi.swiftriver.core.model.Rule.RuleAction;
+import com.ushahidi.swiftriver.core.model.Rule.RuleCondition;
 import com.ushahidi.swiftriver.core.rules.dao.RuleDao;
 
 public class RulesRegistry {
@@ -65,11 +70,18 @@ public class RulesRegistry {
 		// Get the rules from the DB and convert to DTO as they
 		// are added to the dropRulesMap
 		for (Map<String, Object> entry: ruleDao.findAll()) {
-			// Convert the java.utul.Map representation of the rule to JSON
-			String ruleJSON = mapper.writeValueAsString(entry);
 
-			// Serialize the string to rule POJO
-			Rule rule = mapper.readValue(ruleJSON, Rule.class);
+			List<RuleCondition> conditions = mapper.readValue(((String) entry.get("conditions")), 
+					new TypeReference<List<RuleCondition>>() {});
+
+			List<RuleAction> actions = mapper.readValue(((String) entry.get("actions")), 
+					new TypeReference<List<RuleAction>>() {});
+
+			Rule rule = new Rule();
+			rule.setId(((BigInteger) entry.get("id")).longValue());
+			rule.setRiverId(((BigInteger) entry.get("river_id")).longValue());
+			rule.setConditions(conditions);
+			rule.setActions(actions);
 
 			// Get the rules for the river with the specified id
 			Map<Long, Rule> riverRules = getRulesMap().get(rule.getRiverId());

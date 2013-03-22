@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
 
 import com.ushahidi.swiftriver.core.rules.dao.RuleDao;
 
@@ -28,6 +29,7 @@ import com.ushahidi.swiftriver.core.rules.dao.RuleDao;
  * 
  * @author ekala
  */
+@Repository
 public class JdbcRuleDao implements RuleDao {
 
 	private JdbcTemplate jdbcTemplate;
@@ -45,7 +47,8 @@ public class JdbcRuleDao implements RuleDao {
 	 * @see com.ushahidi.swiftriver.core.rules.dao.RuleDao#findAll()
 	 */
 	public List<Map<String,Object>> findAll() {
-		String sql = "SELECT `id`, `river_id`, `rule_name` AS `name`, `rule_conditions` AS `conditions`, `rule_actions` AS `actions`" +
+		String sql = "SELECT `river_rules`.`id`, `river_id`, `rule_name` AS `name`, " +
+				"`rule_conditions` AS `conditions`, `rule_actions` AS `actions`" +
 				"FROM `river_rules` " +
 				"INNER JOIN `rivers` ON (`river_rules`.`river_id` = `rivers`.`id`) " +
 				"WHERE `rivers`.`river_full` = 0 " +

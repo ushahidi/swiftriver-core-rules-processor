@@ -8,7 +8,7 @@ SwiftRiver rules are based on the [Event Condition Action(ECA)](http://en.wikipe
 # Building
 Use maven to build
 
-`$ maven clean package`
+	$ maven clean package
 
 ## Rule Conditions and Actions
 * Conditions
