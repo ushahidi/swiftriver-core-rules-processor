@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context-3.2.xsd
+						http://www.springframework.org/schema/rabbit
+						http://www.springframework.org/schema/rabbit/spring-rabbit-1.1.xsd">
+
+	<!-- Jackson Mapper -->
+	<bean id="jacksonObjectMapper" class="org.codehaus.jackson.map.ObjectMapper">
+		<property name="dateFormat">
+			<bean class="java.text.SimpleDateFormat">
+				<constructor-arg value="EEE, d MMM yyyy HH:mm:ss Z" />
+			</bean>
+		</property>
+	</bean>
+	<bean
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="targetObject" ref="jacksonObjectMapper" />
+		<property name="targetMethod" value="configure" />
+		<property name="arguments">
+			<list>
+				<value type="org.codehaus.jackson.map.DeserializationConfig.Feature">FAIL_ON_UNKNOWN_PROPERTIES</value>
+				<value>false</value>
+			</list>
+		</property>
+	</bean>
+	<bean
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="targetObject" ref="jacksonObjectMapper" />
+		<property name="targetMethod" value="configure" />
+		<property name="arguments">
+			<list>
+				<value type="org.codehaus.jackson.map.SerializationConfig.Feature">WRITE_DATES_AS_TIMESTAMPS</value>
+				<value>false</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${db.driverClassName}" />
+		<property name="url" value="${db.url}" />
+		<property name="username" value="${db.username}" />
+		<property name="password" value="${db.password}" />
+	</bean>
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="ruleDao" class="com.ushahidi.swiftriver.core.rules.dao.impl.JdbcRuleDao">
+		<property name="jdbcTemplate" ref="jdbcTemplate" />
+	</bean>
+	
+	<!-- Rules registry -->
+	<bean id="rulesRegistry" class="com.ushahidi.swiftriver.core.rules.RulesRegistry" init-method="init">
+		<property name="ruleDao" ref="ruleDao" />
+	</bean>
+
+	<!-- Converter for MQ messages -->
+	<bean id="messageConverter"
+		class="org.springframework.amqp.support.converter.JsonMessageConverter" />
+
+	<!-- RabbitMQ Server Connection -->
+	<rabbit:connection-factory id="rabbitConnectionFactory" host="${mq.host}" port="${mq.port}"
+		username="${mq.username}" password="${mq.password}" />
+
+	<!-- Configure the broker -->
+	<rabbit:admin connection-factory="rabbitConnectionFactory" />
+	
+	<rabbit:template id="amqpTemplate" connection-factory="rabbitConnectionFactory" 
+		message-converter="messageConverter"/>
+
+	<bean id="dropQueueRabbitTemplate" class="org.springframework.amqp.rabbit.core.RabbitTemplate">
+		<property name="connectionFactory" ref="rabbitConnectionFactory" />
+		<property name="routingKey" value="DROPLET_QUEUE" />
+		<property name="messageConverter" ref="messageConverter" />
+	</bean>
+
+	<!-- Publisher thread for posting the filtered rules back to the drop queue -->
+	<bean id="publisher" class="com.ushahidi.swiftriver.core.rules.Publisher">
+		<property name="name" value="Publisher-Thread" />
+		<property name="daemon" value="true" />
+		<property name="amqpTemplate" ref="dropQueueRabbitTemplate" />
+		<property name="publishQueue" ref="publishQueue" />
+	</bean>
+
+	<bean id="publishQueue" class="java.util.concurrent.LinkedBlockingQueue" />
+
+	<!-- RULES_UPDATE_QUEUE consumer -->
+	<bean id="rulesUpdateQueueConsumer" class="com.ushahidi.swiftriver.core.rules.RulesUpdateQueueConsumer">
+		<property name="rulesRegistry" ref="rulesRegistry" />
+	</bean>
+	
+	<!-- DROP_FILTER_QUEUE consumer -->	
+	<bean id="dropFilterQueueConsumer" class="com.ushahidi.swiftriver.core.rules.DropFilterQueueConsumer">
+		<property name="rulesRegistry" ref="rulesRegistry" />
+		<property name="publishQueue" ref="publishQueue" />
+	</bean>
+
+	<!-- Declare queues -->
+	<rabbit:queue id="dropFilterQueue" durable="true" name="DROP_FILTER_QUEUE"/>
+
+	<rabbit:queue id="rulesUpdateQueue" durable="false" name="RULES_UPDATE_QUEUE" />
+
+	<rabbit:topic-exchange name="chatter">
+		<rabbit:bindings>
+			<rabbit:binding queue="rulesUpdateQueue" pattern="web.river.rules.*" />
+		</rabbit:bindings>
+	</rabbit:topic-exchange>
+	
+	<!-- Listeners -->
+	<rabbit:listener-container connection-factory="rabbitConnectionFactory" acknowledge="manual">
+		<rabbit:listener queues="dropFilterQueue" ref="dropFilterQueueConsumer"/>
+	</rabbit:listener-container>
+	
+	<rabbit:listener-container connection-factory="rabbitConnectionFactory">
+		<rabbit:listener queues="rulesUpdateQueue" ref="rulesUpdateQueueConsumer"/>
+	</rabbit:listener-container>
+	
+	<!-- Properties files -->
+	<context:property-placeholder location="classpath:*.properties"/>
+
+</beans>
