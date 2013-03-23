@@ -118,7 +118,7 @@ public class RulesExecutor {
 			}
 		}
 
-		return expectedMatchCount == matchCount;
+		return matchCount >= expectedMatchCount;
 	}
 
 	private String getRegex(String value) {

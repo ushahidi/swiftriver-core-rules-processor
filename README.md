@@ -12,6 +12,7 @@ Use maven to build
 
 ## Rule Conditions and Actions
 * Conditions
+
 	The conditions are based on the following drop properties:
 
 	* The title of the drop. In the case of an news article, this would be the heading
@@ -19,6 +20,7 @@ Use maven to build
 	* Source of the drop e.g. name of the origin website, Twitter user etc
 
 * Actions
+
 	The supported rule actions are:
 	
 	* Mark the drop as read

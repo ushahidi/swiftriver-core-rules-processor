@@ -38,7 +38,7 @@ public class Rule {
 	
 	private List<RuleAction> actions;
 
-	@JsonProperty("match_all_conditions")
+	@JsonProperty("all_conditions")
 	private boolean matchAllConditions;
 
 	public long getId() {

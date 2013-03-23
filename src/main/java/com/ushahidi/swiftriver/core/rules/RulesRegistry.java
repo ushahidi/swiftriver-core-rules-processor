@@ -82,6 +82,7 @@ public class RulesRegistry {
 			rule.setRiverId(((BigInteger) entry.get("river_id")).longValue());
 			rule.setConditions(conditions);
 			rule.setActions(actions);
+			rule.setMatchAllConditions((Boolean) entry.get("all_conditions"));
 
 			// Get the rules for the river with the specified id
 			Map<Long, Rule> riverRules = getRulesMap().get(rule.getRiverId());

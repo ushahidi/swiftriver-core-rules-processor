@@ -48,7 +48,8 @@ public class JdbcRuleDao implements RuleDao {
 	 */
 	public List<Map<String,Object>> findAll() {
 		String sql = "SELECT `river_rules`.`id`, `river_id`, `rule_name` AS `name`, " +
-				"`rule_conditions` AS `conditions`, `rule_actions` AS `actions`" +
+				"`rule_conditions` AS `conditions`, `rule_actions` AS `actions`, " +
+				"`rule_all_conditions` AS `all_conditions`" +
 				"FROM `river_rules` " +
 				"INNER JOIN `rivers` ON (`river_rules`.`river_id` = `rivers`.`id`) " +
 				"WHERE `rivers`.`river_full` = 0 " +

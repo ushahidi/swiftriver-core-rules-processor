@@ -66,7 +66,7 @@ public class RulesUpdateQueueConsumerTest {
 
 		MessageProperties mockMessageProperties = mock(MessageProperties.class);
 		
-		String messageBody = "{\"id\": 1, \"river_id\": 20, \"name\": \"Keyword Filter\", \"conditions\": [{\"field\": \"title\", \"operator\": \"contains\", \"value\": \"kenya\"}], \"actions\": [{\"addToBucket\": 2}], \"match_all_conditions\": false}";
+		String messageBody = "{\"id\": 1, \"river_id\": 20, \"name\": \"Keyword Filter\", \"conditions\": [{\"field\": \"title\", \"operator\": \"contains\", \"value\": \"kenya\"}], \"actions\": [{\"addToBucket\": 2}], \"all_conditions\": false}";
 		
 		when(mockMessage.getBody()).thenReturn(messageBody.getBytes());
 		when(mockMessage.getMessageProperties()).thenReturn(mockMessageProperties);
@@ -91,7 +91,7 @@ public class RulesUpdateQueueConsumerTest {
 		Channel mockChannel = mock(Channel.class);
 		MessageProperties mockMessageProperties = mock(MessageProperties.class);
 		
-		String messageBody = "{\"id\": 1, \"river_id\": 20, \"name\": \"Keyword Filter\", \"conditions\": [{\"field\": \"title\", \"operator\": \"contains\", \"value\": \"kenya\"}], \"actions\": [{\"addToBucket\": 2}], \"match_all_conditions\": true}";
+		String messageBody = "{\"id\": 1, \"river_id\": 20, \"name\": \"Keyword Filter\", \"conditions\": [{\"field\": \"title\", \"operator\": \"contains\", \"value\": \"kenya\"}], \"actions\": [{\"addToBucket\": 2}], \"all_conditions\": true}";
 
 		when(mockMessage.getBody()).thenReturn(messageBody.getBytes());
 		when(mockMessage.getMessageProperties()).thenReturn(mockMessageProperties);
@@ -110,7 +110,7 @@ public class RulesUpdateQueueConsumerTest {
 		Channel mockChannel = mock(Channel.class);
 		MessageProperties mockMessageProperties = mock(MessageProperties.class);
 		
-		String messageBody = "{\"id\": 1, \"river_id\": 20, \"name\": \"Keyword Filter\", \"conditions\": [{\"field\": \"title\", \"operator\": \"contains\", \"value\": \"kenya\"}], \"actions\": [{\"addToBucket\": 2}], \"match_all_conditions\": false}";
+		String messageBody = "{\"id\": 1, \"river_id\": 20, \"name\": \"Keyword Filter\", \"conditions\": [{\"field\": \"title\", \"operator\": \"contains\", \"value\": \"kenya\"}], \"actions\": [{\"addToBucket\": 2}], \"all_conditions\": false}";
 		when(mockMessage.getBody()).thenReturn(messageBody.getBytes());
 		when(mockMessage.getMessageProperties()).thenReturn(mockMessageProperties);
 		when(mockMessageProperties.getReceivedRoutingKey()).thenReturn("web.river.rules.delete");
