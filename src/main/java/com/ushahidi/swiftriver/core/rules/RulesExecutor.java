@@ -16,8 +16,14 @@
  */
 package com.ushahidi.swiftriver.core.rules;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ushahidi.swiftriver.core.model.RawDrop;
 import com.ushahidi.swiftriver.core.model.Rule;
@@ -41,8 +47,23 @@ import de.l3s.boilerpipe.extractors.ArticleExtractor;
 public class RulesExecutor {
 
 	private String dropContent = null;
+	
+	//> List of rivers from which the drop is excluded
+	private List<Long> excludedRiverIds = new ArrayList<Long>();
+	
+	static final Logger LOG  = LoggerFactory.getLogger(RulesExecutor.class);
 
-	public void applyRules(RawDrop drop, Map<Long, Map<Long, Rule>> rulesMap) {
+	public void applyRules(RawDrop drop, ConcurrentMap<Long,Map<Long,Rule>> rulesMap) {
+		// Check if the list of bucket ids has been initialized
+		if (drop.getBucketIds() == null) {
+			drop.setBucketIds(new ArrayList<Long>());
+		}
+		
+		// Check if the mark as read list has been initialized
+		if (drop.getMarkAsRead() == null) {
+			drop.setMarkAsRead(new ArrayList<Long>());
+		}
+
 		if (drop.getChannel().equals("rss")) {
 			// Clean the content of all HTML
 			try {
@@ -54,6 +75,8 @@ public class RulesExecutor {
 			dropContent = drop.getContent();
 		}
 
+		LOG.debug("Applying rules to drop");
+
 		for (Long riverId: drop.getRiverIds()) {
 			// Check if the destination river has any defined rules
 			if (rulesMap.containsKey(riverId)) {
@@ -62,6 +85,9 @@ public class RulesExecutor {
 				}
 			}
 		}
+		
+		drop.getRiverIds().removeAll(excludedRiverIds);
+		LOG.debug("Rules exection complete");
 	}
 
 	/**
@@ -75,6 +101,7 @@ public class RulesExecutor {
 	private void executeRule(Long riverId, RawDrop drop, Rule rule) {
 		// Check each condition
 		if (conditionsMatch(drop, rule.getConditions(), rule.isMatchAllConditions())) {
+			LOG.debug(String.format("Conditions for rule %d passed.", rule.getId()));
 			performRuleActions(riverId, drop, rule.getActions());
 		}
 	}
@@ -110,27 +137,48 @@ public class RulesExecutor {
 			} 
 			
 			if (condition.getOperator().equals("contains")) {
-				matchCount += fieldValue.matches(getRegex(condition.getValue())) ? 1 : 0;
+				matchCount += contains(fieldValue, condition.getValue()) ? 1 : 0;
 			}
 			
 			if (condition.getOperator().equals("does not contain")) {
-				matchCount += !fieldValue.matches(getRegex(condition.getValue())) ? 1 : 0;
+				matchCount += !contains(fieldValue, condition.getValue()) ? 1 : 0;
 			}
 		}
 
 		return matchCount >= expectedMatchCount;
 	}
 
-	private String getRegex(String value) {
+	/**
+	 * Checks whether the <code>java.lang.String</code> specified in
+	 * <code>value</code> exists in the input <code>java.lang.String</code>
+	 * specified in <code>subject</code>
+	 * 
+	 * @param subject
+	 * @param value
+	 * @return
+	 */
+	private boolean contains(String subject, String value) {
 		String regex = null;
 		
-		if (value.matches("\\s+")) {
-			regex = String.format("/i(%s)+?/i", value);
+		if (hasSpace(value)) {
+			regex = String.format("(?i)(%s)+?", value);
 		} else {
 			// Use word boundary - case insensitive
-			regex = String.format("/i(\\b%s\\b)+?/i", value);
+			regex = String.format("(?i)(\\b%s\\b)+?", value);
 		}
-		return regex;
+		
+		Pattern pattern = Pattern.compile(regex);
+		return pattern.matcher(subject).find();
+	}
+	
+	/**
+	 * Checks whether the provided input contains whitespace characters
+	 * @param subject
+	 * @return
+	 */
+	private boolean hasSpace(String subject) {
+		Pattern pattern = Pattern.compile("\\s");
+		return pattern.matcher(subject).find();
 	}
 
 	/**
@@ -150,15 +198,15 @@ public class RulesExecutor {
 			if (action.isRemoveFromRiver()) {
 				for (int i = 0; i < drop.getRiverIds().size(); i++) {
 					if (drop.getRiverIds().get(i).equals(riverId)) {
-						drop.getRiverIds().remove(i);
+						excludedRiverIds.add(riverId);
 						break;
 					}
 				}
 			}
 			
-			// Mark the drop as read
+			// Mark the drop as read for the destination river
 			if (action.isMarkAsRead()) {
-				
+				drop.getMarkAsRead().add(riverId);
 			}
 		}
 	}

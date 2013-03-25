@@ -20,11 +20,13 @@ import java.util.concurrent.BlockingQueue;
 
 import org.springframework.amqp.core.AmqpTemplate;
 
+import com.ushahidi.swiftriver.core.model.RawDrop;
+
 public class Publisher extends Thread {
 	
 	private AmqpTemplate amqpTemplate;
 	
-	private BlockingQueue<Object> publishQueue;
+	private BlockingQueue<RawDrop> publishQueue;
 
 	public AmqpTemplate getAmqpTemplate() {
 		return amqpTemplate;
@@ -34,11 +36,11 @@ public class Publisher extends Thread {
 		this.amqpTemplate = amqpTemplate;
 	}
 
-	public BlockingQueue<Object> getPublishQueue() {
+	public BlockingQueue<RawDrop> getPublishQueue() {
 		return publishQueue;
 	}
 
-	public void setPublishQueue(BlockingQueue<Object> publishQueue) {
+	public void setPublishQueue(BlockingQueue<RawDrop> publishQueue) {
 		this.publishQueue = publishQueue;
 	}
 
@@ -56,7 +58,7 @@ public class Publisher extends Thread {
 		}
 	}
 
-	public void publishDrop(Object drop) {
+	public void publishDrop(RawDrop drop) {
 		amqpTemplate.convertAndSend(drop);
 	}
 	

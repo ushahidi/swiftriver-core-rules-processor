@@ -82,7 +82,11 @@ public class RawDrop {
 	private boolean rulesComplete;
 	
 	@JsonProperty("bucket_id")
-	private List<Long> bucketIds;	
+	private List<Long> bucketIds;
+	
+	/** List of river ids for which this drop is to be marked as read */
+	@JsonProperty("mark_as_read")
+	private List<Long> markAsRead;
 
 	public String getChannel() {
 		return channel;
@@ -266,6 +270,14 @@ public class RawDrop {
 
 	public void setBucketIds(List<Long> bucketIds) {
 		this.bucketIds = bucketIds;
+	}
+
+	public List<Long> getMarkAsRead() {
+		return markAsRead;
+	}
+
+	public void setMarkAsRead(List<Long> markAsRead) {
+		this.markAsRead = markAsRead;
 	}
 
 	public static class Link {

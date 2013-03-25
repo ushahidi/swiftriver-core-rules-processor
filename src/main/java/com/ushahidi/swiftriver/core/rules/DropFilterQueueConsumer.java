@@ -19,6 +19,7 @@ package com.ushahidi.swiftriver.core.rules;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -70,10 +71,11 @@ public class DropFilterQueueConsumer implements MessageListener {
 			// Serialize the message into a Drop POJO
 			RawDrop drop = mapper.readValue(new String(message.getBody()), RawDrop.class);
 
-			Map<Long, Map<Long, Rule>> rulesMap = rulesRegistry.getRulesMap();
+			ConcurrentMap<Long, Map<Long, Rule>> rulesMap = rulesRegistry.getRulesMap();
 
 			// Send the drop for rules processing
 			rulesExecutor.applyRules(drop, rulesMap);
+			drop.setSource("rules");
 
 			// Place drop on the publishing queue
 			publishQueue.put(drop);

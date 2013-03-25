@@ -94,7 +94,7 @@ public class RulesRegistry {
 			riverRules.put(rule.getId(), rule);
 
 			// Update the map
-			getRulesMap().put(rule.getId(), riverRules);
+			getRulesMap().put(rule.getRiverId(), riverRules);
 		}
 		
 	}
@@ -116,7 +116,7 @@ public class RulesRegistry {
 		riverRules.remove(rule.getId());
 
 		// Put back the modified rules list
-		rulesMap.put(rule.getId(), riverRules);
+		rulesMap.put(rule.getRiverId(), riverRules);
 		LOG.debug(String.format("Rule %d deleted from the registry" , rule.getId()));
 	}
 	

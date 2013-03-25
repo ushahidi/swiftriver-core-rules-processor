@@ -55,6 +55,6 @@ public class RulesRegistryTest {
 	@Test
 	public void testInit() throws Exception {
 		rulesRegistry.init();
-		assertEquals(3, rulesRegistry.getRulesMap().size());
+		assertEquals(2, rulesRegistry.getRulesMap().size());
 	}
 }
