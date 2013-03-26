@@ -74,22 +74,6 @@
 	<rabbit:template id="amqpTemplate" connection-factory="rabbitConnectionFactory" 
 		message-converter="messageConverter"/>
 
-	<bean id="dropQueueRabbitTemplate" class="org.springframework.amqp.rabbit.core.RabbitTemplate">
-		<property name="connectionFactory" ref="rabbitConnectionFactory" />
-		<property name="routingKey" value="DROPLET_QUEUE" />
-		<property name="messageConverter" ref="messageConverter" />
-	</bean>
-
-	<!-- Publisher thread for posting the filtered rules back to the drop queue -->
-	<bean id="publisher" class="com.ushahidi.swiftriver.core.rules.Publisher">
-		<property name="name" value="Publisher-Thread" />
-		<property name="daemon" value="true" />
-		<property name="amqpTemplate" ref="dropQueueRabbitTemplate" />
-		<property name="publishQueue" ref="publishQueue" />
-	</bean>
-
-	<bean id="publishQueue" class="java.util.concurrent.LinkedBlockingQueue" />
-
 	<!-- RULES_UPDATE_QUEUE consumer -->
 	<bean id="rulesUpdateQueueConsumer" class="com.ushahidi.swiftriver.core.rules.RulesUpdateQueueConsumer">
 		<property name="rulesRegistry" ref="rulesRegistry" />
@@ -98,7 +82,7 @@
 	<!-- DROP_FILTER_QUEUE consumer -->	
 	<bean id="dropFilterQueueConsumer" class="com.ushahidi.swiftriver.core.rules.DropFilterQueueConsumer">
 		<property name="rulesRegistry" ref="rulesRegistry" />
-		<property name="publishQueue" ref="publishQueue" />
+		<property name="amqpTemplate" ref="amqpTemplate" />
 	</bean>
 
 	<!-- Declare queues -->

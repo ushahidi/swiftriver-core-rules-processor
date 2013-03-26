@@ -18,15 +18,18 @@ package com.ushahidi.swiftriver.core.rules;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageListener;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
 
+import com.rabbitmq.client.Channel;
 import com.ushahidi.swiftriver.core.model.RawDrop;
 import com.ushahidi.swiftriver.core.model.Rule;
 
@@ -39,22 +42,18 @@ import com.ushahidi.swiftriver.core.model.Rule;
  * @author ekala
  *
  */
-public class DropFilterQueueConsumer implements MessageListener {
+public class DropFilterQueueConsumer implements ChannelAwareMessageListener {
 	
 	private ObjectMapper mapper = new ObjectMapper();
 	
-	private BlockingQueue<RawDrop> publishQueue;
-
-	private RulesRegistry rulesRegistry;
+		private RulesRegistry rulesRegistry;
 
 	private RulesExecutor rulesExecutor;
+
+	private AmqpTemplate amqpTemplate;
 	
 	public DropFilterQueueConsumer() {
 		rulesExecutor = new RulesExecutor();
-	}
-
-	public void setPublishQueue(BlockingQueue<RawDrop> publishQueue) {
-		this.publishQueue = publishQueue;
 	}
 
 	public void setRulesRegistry(RulesRegistry rulesRegistry) {
@@ -65,29 +64,40 @@ public class DropFilterQueueConsumer implements MessageListener {
 		this.rulesExecutor = rulesExecutor;
 	}
 
+	public void setAmqpTemplate(AmqpTemplate amqpTemplate) {
+		this.amqpTemplate = amqpTemplate;
+		
+	}
+
 	@Override
-	public void onMessage(Message message) {
-		try {
-			// Serialize the message into a Drop POJO
-			RawDrop drop = mapper.readValue(new String(message.getBody()), RawDrop.class);
+	public void onMessage(Message message, Channel channel) throws Exception, JsonGenerationException,
+		JsonMappingException, IOException {
+		
+		// Serialize the message into a Drop POJO
+		RawDrop drop = mapper.readValue(new String(message.getBody()), RawDrop.class);
 
-			ConcurrentMap<Long, Map<Long, Rule>> rulesMap = rulesRegistry.getRulesMap();
+		ConcurrentMap<Long, Map<Long, Rule>> rulesMap = rulesRegistry.getRulesMap();
 
-			// Send the drop for rules processing
-			rulesExecutor.applyRules(drop, rulesMap);
-			drop.setSource("rules");
+		// Send the drop for rules processing
+		rulesExecutor.applyRules(drop, rulesMap);
+		
+		// Set the source to "rules"
+		drop.setSource("rules");
 
-			// Place drop on the publishing queue
-			publishQueue.put(drop);
-		} catch (JsonGenerationException je) {
-			je.printStackTrace();
-		} catch (JsonMappingException jm) {
-			jm.printStackTrace();
-		} catch (IOException io) {
-			io.printStackTrace();
-		} catch (InterruptedException ie) {
-			ie.printStackTrace();
-		}
+		// Get he correlation id and callback queue name
+		final String correlationId = new String(message.getMessageProperties().getCorrelationId());
+		final String callbackQueueName = message.getMessageProperties().getReplyTo();
+
+		// Place drop on the publishing queue
+		amqpTemplate.convertAndSend(drop, new MessagePostProcessor() {
+			public Message postProcessMessage(Message message) throws AmqpException {
+				message.getMessageProperties().setCorrelationId(correlationId.getBytes());
+				message.getMessageProperties().setReplyTo(callbackQueueName);
+
+				return message;
+			}
+			
+		});
 	}
 
 }

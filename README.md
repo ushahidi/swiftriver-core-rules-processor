@@ -5,7 +5,7 @@ The Rules Processor is an application that:
 
 SwiftRiver rules are based on the [Event Condition Action(ECA)](http://en.wikipedia.org/wiki/Event_condition_action) pattern.
 
-# Building
+## Building
 Use maven to build
 
 	$ maven clean package
@@ -27,7 +27,7 @@ Use maven to build
 	* Discard the drop from the (destination) river
 	* Add the drop to a bucket
 
-# License
+## License
 Copyright 2013 Ushahidi Inc.
 
 Licensed under AGPL v3. For a full copy of the license, see: http://www.gnu.org/licenses/agpl.html

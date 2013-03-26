@@ -30,8 +30,5 @@ public class RulesProcessor {
 		AbstractApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
 		context.registerShutdownHook();
 		
-		// Start the DROP_QUEUE publisher
-		Publisher publisher = new Publisher();
-		publisher.start();
 	}
 }
