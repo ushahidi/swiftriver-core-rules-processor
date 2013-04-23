@@ -92,6 +92,7 @@ public class DropFilterQueueConsumer implements ChannelAwareMessageListener, Err
 		// Get he correlation id and callback queue name
 		final String correlationId = new String(message.getMessageProperties().getCorrelationId());
 		String routingKey = message.getMessageProperties().getReplyTo();
+		long deliveryTag = message.getMessageProperties().getDeliveryTag();
 		
 		// Place drop on the publishing queue
 		amqpTemplate.convertAndSend(routingKey, drop, new MessagePostProcessor() {
@@ -107,6 +108,9 @@ public class DropFilterQueueConsumer implements ChannelAwareMessageListener, Err
 			
 		});
 		
+		// Only acknowledge the current message
+		channel.basicAck(deliveryTag, false);
+
 		logger.debug("Drop with correlation id {} has completed rules processing", correlationId);
 	}
 
