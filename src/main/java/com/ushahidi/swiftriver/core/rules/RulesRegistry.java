@@ -17,7 +17,6 @@
 package com.ushahidi.swiftriver.core.rules;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -78,8 +77,8 @@ public class RulesRegistry {
 					new TypeReference<List<RuleAction>>() {});
 
 			Rule rule = new Rule();
-			rule.setId(((BigInteger) entry.get("id")).longValue());
-			rule.setRiverId(((BigInteger) entry.get("river_id")).longValue());
+			rule.setId(((Number) entry.get("id")).longValue());
+			rule.setRiverId(((Number) entry.get("river_id")).longValue());
 			rule.setConditions(conditions);
 			rule.setActions(actions);
 			rule.setMatchAllConditions((Boolean) entry.get("all_conditions"));

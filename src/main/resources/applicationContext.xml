@@ -3,11 +3,15 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-						http://www.springframework.org/schema/context
-						http://www.springframework.org/schema/context/spring-context-3.2.xsd
-						http://www.springframework.org/schema/rabbit
-						http://www.springframework.org/schema/rabbit/spring-rabbit-1.1.xsd">
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc 
+		http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
+		http://www.springframework.org/schema/rabbit 
+		http://www.springframework.org/schema/rabbit/spring-rabbit-1.1.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd">
 
 	<!-- Jackson Mapper -->
 	<bean id="jacksonObjectMapper" class="org.codehaus.jackson.map.ObjectMapper">
@@ -40,13 +44,6 @@
 		</property>
 	</bean>
 	
-	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-		<property name="driverClassName" value="${db.driverClassName}" />
-		<property name="url" value="${db.url}" />
-		<property name="username" value="${db.username}" />
-		<property name="password" value="${db.password}" />
-	</bean>
-
 	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
@@ -65,8 +62,9 @@
 		class="org.springframework.amqp.support.converter.JsonMessageConverter" />
 
 	<!-- RabbitMQ Server Connection -->
-	<rabbit:connection-factory id="rabbitConnectionFactory" host="${mq.host}" port="${mq.port}"
-		username="${mq.username}" password="${mq.password}" />
+	<rabbit:connection-factory id="rabbitConnectionFactory" 
+		host="${mq.host}" port="${mq.port}" username="${mq.username}" 
+		password="${mq.password}" channel-cache-size="${mq.num_workers}"/>
 
 	<!-- Configure the broker -->
 	<rabbit:admin connection-factory="rabbitConnectionFactory" />
@@ -85,9 +83,17 @@
 		<property name="amqpTemplate" ref="amqpTemplate" />
 	</bean>
 
-	<!-- Declare queues -->
+	<!-- Declares a queue named DROP_FILTER_QUEUE -->
 	<rabbit:queue id="dropFilterQueue" durable="true" name="DROP_FILTER_QUEUE"/>
-
+	
+	<!--Declares the dropFilter exchange and binds it to dropFilterQueue  -->
+	<rabbit:direct-exchange name="dropFilter" durable="true">
+		<rabbit:bindings>
+			<rabbit:binding queue="dropFilterQueue" />
+		</rabbit:bindings>
+	</rabbit:direct-exchange>
+	
+	<!-- Declares a queue named RULES_UPDATE_QUEUE -->
 	<rabbit:queue id="rulesUpdateQueue" durable="false" name="RULES_UPDATE_QUEUE" />
 
 	<rabbit:topic-exchange name="chatter">
@@ -97,7 +103,9 @@
 	</rabbit:topic-exchange>
 	
 	<!-- Listeners -->
-	<rabbit:listener-container connection-factory="rabbitConnectionFactory" acknowledge="manual">
+	<rabbit:listener-container  connection-factory="rabbitConnectionFactory" 
+		acknowledge="manual" error-handler="dropFilterQueueConsumer" 
+		prefetch="${mq.batch_size}" concurrency="${mq.num_workers}">
 		<rabbit:listener queues="dropFilterQueue" ref="dropFilterQueueConsumer"/>
 	</rabbit:listener-container>
 	
@@ -105,7 +113,25 @@
 		<rabbit:listener queues="rulesUpdateQueue" ref="rulesUpdateQueueConsumer"/>
 	</rabbit:listener-container>
 	
-	<!-- Properties files -->
-	<context:property-placeholder location="classpath:*.properties"/>
+	<beans profile="default">
+		<!-- Properties files -->
+		<context:property-placeholder location="file:///${ext.prop.dir}/*.properties"/>
 
+		<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${db.driverClassName}" />
+			<property name="url" value="${db.url}" />
+			<property name="username" value="${db.username}" />
+			<property name="password" value="${db.password}" />
+		</bean>
+	</beans>
+
+	<beans profile="test">
+		<!-- MQ properties -->
+		<context:property-placeholder location="classpath:*.properties"/>
+
+		<jdbc:embedded-database id="dataSource" type="H2">
+			<jdbc:script location="classpath:schema.sql" />
+			<jdbc:script location="classpath:test-data.sql" />
+		</jdbc:embedded-database>
+	</beans>
 </beans>

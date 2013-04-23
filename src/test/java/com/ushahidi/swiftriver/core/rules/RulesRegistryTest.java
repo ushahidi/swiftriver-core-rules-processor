@@ -24,17 +24,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.ushahidi.swiftriver.core.model.Rule;
 import com.ushahidi.swiftriver.core.rules.dao.RuleDao;
 
-@ContextConfiguration(locations = "/applicationContext.xml")
-@RunWith(SpringJUnit4ClassRunner.class)
-public class RulesRegistryTest {
+public class RulesRegistryTest extends AbstractRuleProcessorTest {
 	
 	@Autowired
 	private RuleDao ruleDao;

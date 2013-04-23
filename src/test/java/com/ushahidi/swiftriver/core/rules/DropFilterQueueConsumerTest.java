@@ -91,13 +91,18 @@ public class DropFilterQueueConsumerTest {
 		dropFilterQueueConsumer.onMessage(mockMessage, mockChannel);
 		
 		ArgumentCaptor<RawDrop> dropArgument = ArgumentCaptor.forClass(RawDrop.class);
+		ArgumentCaptor<String> routingKeyArgument = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<MessagePostProcessor> postProcessorArgument = ArgumentCaptor
 				.forClass(MessagePostProcessor.class);
 
 		verify(mockRulesExecutor).applyRules(dropArgument.capture(), rulesMapArgument.capture());
-		verify(mockAmqpTemplate).convertAndSend(dropArgument.capture(), postProcessorArgument.capture());
+		verify(mockAmqpTemplate).convertAndSend(routingKeyArgument.capture(), 
+				dropArgument.capture(), postProcessorArgument.capture());
 
+		String routingKey = routingKeyArgument.getValue();
+		assertEquals("reply-to-queue", routingKey);
 		RawDrop drop = dropArgument.getValue();		
 		assertEquals("rules", drop.getSource());
+		
 	}
 }

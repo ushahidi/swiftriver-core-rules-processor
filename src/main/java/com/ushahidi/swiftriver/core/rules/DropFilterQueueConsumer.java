@@ -17,17 +17,21 @@
 package com.ushahidi.swiftriver.core.rules;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
+import org.springframework.util.ErrorHandler;
 
 import com.rabbitmq.client.Channel;
 import com.ushahidi.swiftriver.core.model.RawDrop;
@@ -42,15 +46,17 @@ import com.ushahidi.swiftriver.core.model.Rule;
  * @author ekala
  *
  */
-public class DropFilterQueueConsumer implements ChannelAwareMessageListener {
+public class DropFilterQueueConsumer implements ChannelAwareMessageListener, ErrorHandler {
 	
 	private ObjectMapper mapper = new ObjectMapper();
 	
-		private RulesRegistry rulesRegistry;
+	private RulesRegistry rulesRegistry;
 
 	private RulesExecutor rulesExecutor;
 
 	private AmqpTemplate amqpTemplate;
+	
+	final static Logger logger = LoggerFactory.getLogger(DropFilterQueueConsumer.class); 
 	
 	public DropFilterQueueConsumer() {
 		rulesExecutor = new RulesExecutor();
@@ -69,9 +75,8 @@ public class DropFilterQueueConsumer implements ChannelAwareMessageListener {
 		
 	}
 
-	@Override
-	public void onMessage(Message message, Channel channel) throws Exception, JsonGenerationException,
-		JsonMappingException, IOException {
+	public synchronized void onMessage(Message message, Channel channel) 
+			throws Exception, JsonGenerationException, JsonMappingException, IOException {
 		
 		// Serialize the message into a Drop POJO
 		RawDrop drop = mapper.readValue(new String(message.getBody()), RawDrop.class);
@@ -86,18 +91,28 @@ public class DropFilterQueueConsumer implements ChannelAwareMessageListener {
 
 		// Get he correlation id and callback queue name
 		final String correlationId = new String(message.getMessageProperties().getCorrelationId());
-		final String callbackQueueName = message.getMessageProperties().getReplyTo();
-
+		String routingKey = message.getMessageProperties().getReplyTo();
+		
 		// Place drop on the publishing queue
-		amqpTemplate.convertAndSend(drop, new MessagePostProcessor() {
+		amqpTemplate.convertAndSend(routingKey, drop, new MessagePostProcessor() {
 			public Message postProcessMessage(Message message) throws AmqpException {
-				message.getMessageProperties().setCorrelationId(correlationId.getBytes());
-				message.getMessageProperties().setReplyTo(callbackQueueName);
+				try {
+					message.getMessageProperties().setCorrelationId(correlationId.getBytes("UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					logger.error("An error occurred while setting the correlation ID {}", correlationId, e);
+				}
 
 				return message;
 			}
 			
 		});
+		
+		logger.debug("Drop with correlation id {} has completed rules processing", correlationId);
+	}
+
+	@Override
+	public void handleError(Throwable t) {
+		logger.error("An error was encountered while processing the drop", t);
 	}
 
 }

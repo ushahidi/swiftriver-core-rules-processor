@@ -16,21 +16,14 @@
  */
 package com.ushahidi.swiftriver.core.rules;
 
-import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-/**
- * Main class for running the rules processor application
- * 
- * @author ekala
- */
-public class RulesProcessor {
-	
-	@SuppressWarnings("resource")
-	public static void main(String[] args) {
-		AbstractApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
-		
-		applicationContext.registerShutdownHook();
-		
-	}
+@ContextConfiguration(locations="/applicationContext.xml")
+@RunWith(SpringJUnit4ClassRunner.class)
+@ActiveProfiles(profiles={"test"})
+public abstract class AbstractRuleProcessorTest {
+
 }
