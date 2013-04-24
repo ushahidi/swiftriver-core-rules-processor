@@ -119,6 +119,13 @@
 	<!-- Build -->
 	<build>
 		<finalName>rules-processor</finalName>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
+			</plugin>
 		<plugins>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
