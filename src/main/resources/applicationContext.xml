@@ -64,7 +64,7 @@
 	<!-- RabbitMQ Server Connection -->
 	<rabbit:connection-factory id="rabbitConnectionFactory" 
 		host="${mq.host}" port="${mq.port}" username="${mq.username}" 
-		password="${mq.password}" channel-cache-size="#{ ${mq.batch_size} * ${mq.num_workers} }"/>
+		password="${mq.password}" channel-cache-size="${mq.num_workers}"/>
 
 	<!-- Configure the broker -->
 	<rabbit:admin connection-factory="rabbitConnectionFactory" />
@@ -103,9 +103,9 @@
 	</rabbit:topic-exchange>
 	
 	<!-- Listeners -->
-	<rabbit:listener-container  connection-factory="rabbitConnectionFactory" 
+	<rabbit:listener-container connection-factory="rabbitConnectionFactory" 
 		acknowledge="manual" error-handler="dropFilterQueueConsumer" 
-		concurrency="${mq.num_workers}">
+		prefetch="#{ ${mq.batch_size} * ${mq.num_workers} }" concurrency="${mq.num_workers}">
 		<rabbit:listener queues="dropFilterQueue" ref="dropFilterQueueConsumer"/>
 	</rabbit:listener-container>
 	
