@@ -195,22 +195,6 @@ public class RawDrop {
 		this.source = source;
 	}
 
-	public boolean isSemanticsComplete() {
-		return semanticsComplete;
-	}
-
-	public void setSemanticsComplete(boolean semanticsComplete) {
-		this.semanticsComplete = semanticsComplete;
-	}
-
-	public boolean isMediaComplete() {
-		return mediaComplete;
-	}
-
-	public void setMediaComplete(boolean mediaComplete) {
-		this.mediaComplete = mediaComplete;
-	}
-
 	public List<Long> getChannelIds() {
 		return channelIds;
 	}
@@ -259,6 +243,22 @@ public class RawDrop {
 		this.places = places;
 	}
 
+	public List<Long> getBucketIds() {
+		return bucketIds;
+	}
+
+	public void setBucketIds(List<Long> bucketIds) {
+		this.bucketIds = bucketIds;
+	}
+
+	public List<Long> getMarkAsRead() {
+		return markAsRead;
+	}
+
+	public void setMarkAsRead(List<Long> markAsRead) {
+		this.markAsRead = markAsRead;
+	}
+
 	public Long getDeliveryTag() {
 		return deliveryTag;
 	}
@@ -275,20 +275,20 @@ public class RawDrop {
 		this.rulesComplete = rulesComplete;
 	}
 
-	public List<Long> getBucketIds() {
-		return bucketIds;
+	public boolean isSemanticsComplete() {
+		return semanticsComplete;
 	}
 
-	public void setBucketIds(List<Long> bucketIds) {
-		this.bucketIds = bucketIds;
+	public void setSemanticsComplete(boolean semanticsComplete) {
+		this.semanticsComplete = semanticsComplete;
 	}
 
-	public List<Long> getMarkAsRead() {
-		return markAsRead;
+	public boolean isMediaComplete() {
+		return mediaComplete;
 	}
 
-	public void setMarkAsRead(List<Long> markAsRead) {
-		this.markAsRead = markAsRead;
+	public void setMediaComplete(boolean mediaComplete) {
+		this.mediaComplete = mediaComplete;
 	}
 
 	public static class Link {
@@ -321,8 +321,8 @@ public class RawDrop {
 		
 		private String type;
 		
-		@JsonProperty("drop_image")
-		private String dropImage;
+		@JsonProperty("droplet_image")
+		private boolean dropImage;
 		
 		private List<Thumbnail> thumbnails;
 
@@ -342,11 +342,11 @@ public class RawDrop {
 			this.type = type;
 		}
 
-		public String getDropImage() {
+		public boolean isDropImage() {
 			return dropImage;
 		}
 
-		public void setDropImage(String dropImage) {
+		public void setDropImage(boolean dropImage) {
 			this.dropImage = dropImage;
 		}
 
