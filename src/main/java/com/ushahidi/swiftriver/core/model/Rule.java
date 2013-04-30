@@ -32,8 +32,6 @@ public class Rule {
 	@JsonProperty("river_id")
 	private long riverId;
 	
-	private String name;
-		
 	private List<RuleCondition> conditions;
 	
 	private List<RuleAction> actions;
@@ -55,14 +53,6 @@ public class Rule {
 
 	public void setRiverId(Long riverId) {
 		this.riverId = riverId;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public List<RuleCondition> getConditions() {
