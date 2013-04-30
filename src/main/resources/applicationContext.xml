@@ -43,7 +43,7 @@
 			</list>
 		</property>
 	</bean>
-	
+
 	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
@@ -109,13 +109,14 @@
 		<rabbit:listener queues="dropFilterQueue" ref="dropFilterQueueConsumer"/>
 	</rabbit:listener-container>
 	
-	<rabbit:listener-container connection-factory="rabbitConnectionFactory">
+	<rabbit:listener-container connection-factory="rabbitConnectionFactory"
+		error-handler="rulesUpdateQueueConsumer">
 		<rabbit:listener queues="rulesUpdateQueue" ref="rulesUpdateQueueConsumer"/>
 	</rabbit:listener-container>
 	
 	<beans profile="default">
 		<!-- Properties files -->
-		<context:property-placeholder location="file:///${ext.prop.dir}/*.properties"/>
+		<context:property-placeholder location="file:///${ext.prop.dir}/rules-processor.properties"/>
 
 		<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 			<property name="driverClassName" value="${db.driverClassName}" />
