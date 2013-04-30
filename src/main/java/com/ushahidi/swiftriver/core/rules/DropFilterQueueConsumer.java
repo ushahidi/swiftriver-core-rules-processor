@@ -114,7 +114,6 @@ public class DropFilterQueueConsumer implements ChannelAwareMessageListener, Err
 		logger.debug("Drop with correlation id {} has completed rules processing", correlationId);
 	}
 
-	@Override
 	public void handleError(Throwable t) {
 		logger.error("An error was encountered while processing the drop", t);
 	}

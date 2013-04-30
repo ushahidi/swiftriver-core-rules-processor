@@ -18,18 +18,23 @@ package com.ushahidi.swiftriver.core.rules;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
+import org.springframework.util.ErrorHandler;
 
 import com.rabbitmq.client.Channel;
 import com.ushahidi.swiftriver.core.model.Rule;
+import com.ushahidi.swiftriver.core.model.Rule.RuleAction;
+import com.ushahidi.swiftriver.core.model.Rule.RuleCondition;
 
 /**
  * This class listens for rule(add/delete/update) messages sent on the 
@@ -39,7 +44,7 @@ import com.ushahidi.swiftriver.core.model.Rule;
  * @author ekala
  *
  */
-public class RulesUpdateQueueConsumer implements ChannelAwareMessageListener {
+public class RulesUpdateQueueConsumer implements ChannelAwareMessageListener, ErrorHandler {
 	
 	private ConcurrentMap<Long, List<Object>> dropRulesMap;
 	
@@ -74,9 +79,24 @@ public class RulesUpdateQueueConsumer implements ChannelAwareMessageListener {
 
 		// Get the routing key
 		String routingKey = message.getMessageProperties().getReceivedRoutingKey();
-		
-		Rule rule = objectMapper.readValue(new String(message.getBody()), Rule.class);
 
+		// Deserialize the JSON message
+		Map<String, Object> ruleMap = objectMapper.readValue(new String(message.getBody()),
+				new TypeReference<Map<String, Object>>() {});
+		
+		Rule rule = new Rule();
+		rule.setId(((Number) ruleMap.get("id")).longValue());
+		rule.setRiverId(((Number) ruleMap.get("river_id")).longValue());
+		rule.setMatchAllConditions((Boolean) ruleMap.get("all_conditions"));
+		
+		List<RuleCondition> ruleConditions = objectMapper.convertValue(ruleMap.get("conditions"), 
+				new TypeReference<List<RuleCondition>>() {});
+		rule.setConditions(ruleConditions);
+
+		List<RuleAction> ruleActions = objectMapper.convertValue(ruleMap.get("actions"), 
+				new TypeReference<List<RuleAction>>() {}); 
+		rule.setActions(ruleActions);
+		
 		if (routingKey.equals("web.river.rules.add")) {
 			rulesRegistry.addRule(rule);
 		} else if (routingKey.equals("web.river.rules.delete")) {
@@ -84,6 +104,10 @@ public class RulesUpdateQueueConsumer implements ChannelAwareMessageListener {
 		} else if (routingKey.equals("web.river.rules.update")) {
 			rulesRegistry.updateRule(rule);
 		}
+	}
+
+	public void handleError(Throwable t) {
+		LOG.error("An error occurred during rules processing", t);
 	}
 
 }
