@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -49,6 +50,8 @@ public class RulesUpdateQueueConsumerTest {
 	
 	private RulesRegistry rulesRegistry;
 	
+	private ObjectMapper objectMapper = new ObjectMapper();
+	
 	@Before
 	public void setUp() {
 		dropRulesMap = new ConcurrentHashMap<Long, List<Object>>();
@@ -57,6 +60,7 @@ public class RulesUpdateQueueConsumerTest {
 		rulesUpdateQueueConsumer = new RulesUpdateQueueConsumer();
 		rulesUpdateQueueConsumer.setDropRulesMap(dropRulesMap);
 		rulesUpdateQueueConsumer.setRulesRegistry(rulesRegistry);
+		rulesUpdateQueueConsumer.setObjectMapper(objectMapper);
 	}
 	
 	@Test

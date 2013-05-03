@@ -48,7 +48,7 @@ import com.ushahidi.swiftriver.core.model.Rule;
  */
 public class DropFilterQueueConsumer implements ChannelAwareMessageListener, ErrorHandler {
 	
-	private ObjectMapper mapper = new ObjectMapper();
+	private ObjectMapper objectMapper;
 	
 	private RulesRegistry rulesRegistry;
 
@@ -72,14 +72,17 @@ public class DropFilterQueueConsumer implements ChannelAwareMessageListener, Err
 
 	public void setAmqpTemplate(AmqpTemplate amqpTemplate) {
 		this.amqpTemplate = amqpTemplate;
-		
+	}
+
+	public void setObjectMapper(ObjectMapper mapper) {
+		this.objectMapper = mapper;
 	}
 
 	public synchronized void onMessage(Message message, Channel channel) 
-			throws Exception, JsonGenerationException, JsonMappingException, IOException {
+			throws JsonGenerationException, JsonMappingException, IOException {
 		
 		// Serialize the message into a Drop POJO
-		RawDrop drop = mapper.readValue(new String(message.getBody()), RawDrop.class);
+		RawDrop drop = objectMapper.readValue(new String(message.getBody()), RawDrop.class);
 
 		ConcurrentMap<Long, Map<Long, Rule>> rulesMap = rulesRegistry.getRulesMap();
 

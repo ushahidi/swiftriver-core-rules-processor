@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,6 +58,8 @@ public class DropFilterQueueConsumerTest {
 	private RulesRegistry rulesRegistry;
 	
 	private AmqpTemplate mockAmqpTemplate;
+	
+	private ObjectMapper objectMapper = new ObjectMapper();
 
 	@Captor
 	private ArgumentCaptor<ConcurrentMap<Long, Map<Long, Rule>>> rulesMapArgument;
@@ -72,6 +75,7 @@ public class DropFilterQueueConsumerTest {
 		dropFilterQueueConsumer.setRulesExecutor(mockRulesExecutor);
 		dropFilterQueueConsumer.setRulesRegistry(rulesRegistry);
 		dropFilterQueueConsumer.setAmqpTemplate(mockAmqpTemplate);
+		dropFilterQueueConsumer.setObjectMapper(objectMapper);
 	}
 	
 	@Test

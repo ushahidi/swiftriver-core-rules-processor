@@ -75,12 +75,14 @@
 	<!-- RULES_UPDATE_QUEUE consumer -->
 	<bean id="rulesUpdateQueueConsumer" class="com.ushahidi.swiftriver.core.rules.RulesUpdateQueueConsumer">
 		<property name="rulesRegistry" ref="rulesRegistry" />
+		<property name="objectMapper" ref="jacksonObjectMapper" />
 	</bean>
 	
 	<!-- DROP_FILTER_QUEUE consumer -->	
 	<bean id="dropFilterQueueConsumer" class="com.ushahidi.swiftriver.core.rules.DropFilterQueueConsumer">
 		<property name="rulesRegistry" ref="rulesRegistry" />
 		<property name="amqpTemplate" ref="amqpTemplate" />
+		<property name="objectMapper" ref="jacksonObjectMapper" />
 	</bean>
 
 	<!-- Declares a queue named DROP_FILTER_QUEUE -->

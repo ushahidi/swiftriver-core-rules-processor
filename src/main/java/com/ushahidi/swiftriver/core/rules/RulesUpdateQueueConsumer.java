@@ -46,7 +46,7 @@ public class RulesUpdateQueueConsumer implements ChannelAwareMessageListener, Er
 	
 	private RulesRegistry rulesRegistry;
 	
-	private ObjectMapper objectMapper = new ObjectMapper();
+	private ObjectMapper objectMapper;
 	
 	static final Logger logger = LoggerFactory.getLogger(RulesUpdateQueueConsumer.class);
 
@@ -66,6 +66,10 @@ public class RulesUpdateQueueConsumer implements ChannelAwareMessageListener, Er
 		this.rulesRegistry = rulesRegistry;
 	}
 	
+	public void setObjectMapper(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.amqp.core.MessageListener#onMessage(org.springframework.amqp.core.Message)
