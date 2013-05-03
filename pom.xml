@@ -137,7 +137,7 @@
 					
 					<daemons>
 						<daemon>
-							<id>dropqueue-processor</id>
+							<id>rules-processor</id>
 							<mainClass>com.ushahidi.swiftriver.core.rules.RulesProcessor</mainClass>
 							<commandLineArguments>
 								<commandLineArgument>start</commandLineArgument>
