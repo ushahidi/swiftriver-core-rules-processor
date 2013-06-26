@@ -51,9 +51,15 @@ public class RulesExecutor {
 	//> List of rivers from which the drop is excluded
 	private List<Long> excludedRiverIds = new ArrayList<Long>();
 	
-	static final Logger LOG  = LoggerFactory.getLogger(RulesExecutor.class);
+	static final Logger logger  = LoggerFactory.getLogger(RulesExecutor.class);
 
 	public void applyRules(RawDrop drop, ConcurrentMap<Long,Map<Long,Rule>> rulesMap) {
+		// Check if the drop content exists
+		if (drop.getContent() == null) {
+			logger.debug("The drop does not have any content. Skipping rules processing");
+			return;
+		}
+
 		// Check if the list of bucket ids has been initialized
 		if (drop.getBucketIds() == null) {
 			drop.setBucketIds(new ArrayList<Long>());
@@ -75,7 +81,7 @@ public class RulesExecutor {
 			dropContent = drop.getContent();
 		}
 
-		LOG.debug("Applying rules to drop");
+		logger.debug("Applying rules to drop");
 
 		for (Long riverId: drop.getRiverIds()) {
 			// Check if the destination river has any defined rules
@@ -87,7 +93,7 @@ public class RulesExecutor {
 		}
 		
 		drop.getRiverIds().removeAll(excludedRiverIds);
-		LOG.debug("Rules exection complete");
+		logger.debug("Rules exection complete");
 	}
 
 	/**
@@ -101,7 +107,7 @@ public class RulesExecutor {
 	private void executeRule(Long riverId, RawDrop drop, Rule rule) {
 		// Check each condition
 		if (conditionsMatch(drop, rule.getConditions(), rule.isMatchAllConditions())) {
-			LOG.debug(String.format("Conditions for rule %d passed.", rule.getId()));
+			logger.debug(String.format("Conditions for rule %d passed.", rule.getId()));
 			performRuleActions(riverId, drop, rule.getActions());
 		}
 	}
